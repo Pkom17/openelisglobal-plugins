@@ -15,7 +15,9 @@ import javax.servlet.ServletException;
 import org.openelisglobal.analysis.service.AnalysisService;
 import org.openelisglobal.analysis.valueholder.Analysis;
 import org.openelisglobal.analyzerresults.valueholder.AnalyzerResults;
+import org.openelisglobal.common.log.LogEvent;
 import org.openelisglobal.patient.valueholder.Patient;
+import org.openelisglobal.patient.service.PatientService;
 import org.openelisglobal.plugin.ServletPlugin;
 import org.openelisglobal.sample.service.SampleService;
 import org.openelisglobal.sample.valueholder.Sample;
@@ -60,6 +62,7 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 	private static final String[] LOINC_CODES = { "29615-2", "11011-4", "10351-5", "94500-6" };
 	SampleService sampleService = SpringContext.getBean(SampleService.class);
 	AnalysisService analysisService = SpringContext.getBean(AnalysisService.class);
+	PatientService patientService = SpringContext.getBean(PatientService.class);
 	private GeneXpertAnalyzerImplementation inserter ;
 
 	@Override
@@ -86,6 +89,7 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 		@Override
 		public Message processMessage(Message message, @SuppressWarnings("rawtypes") Map theMetadata)
 				throws ReceivingApplicationException, HL7Exception {
+			LogEvent.logTrace(this.getClass().getSimpleName(), "processMessage", "received an HL7 message for GeneXpert analyzer");
 			MSH messageHeader = (MSH) message.get("MSH");
 
 			Message response = null;
@@ -119,9 +123,8 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 
 		private RSP_Z02 instrumentSystemSendsHostQueryStart(QBP_Z03 message,
 				@SuppressWarnings("rawtypes") Map theMetadata) throws HL7Exception, IOException {
+			LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemSendsHostQueryStart", "received an HL7 message for GeneXpert analyzer: Host query");
 			activeRequests.put(message.getMSH().getMessageControlID().getValue(), message);
-
-			// TODO use these to get the right objects
 			Optional<Type> patientId = message.getQPD().getField(3).length > 0
 					? Optional.of(((Varies) message.getQPD().getField(3, 0)).getData())
 					: Optional.empty();
@@ -131,13 +134,19 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 					: Optional.empty();
 
 			List<Patient> patients = new ArrayList<>();
-			patients.add(new Patient());
+			if (patientId.isPresent()) {
+				LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemSendsHostQueryStart", "looking for patient with id: "+ patientId.get());
+			}
+
+			patientId.ifPresent(p -> patients.add(patientService.get(patientId.toString())));
 
 			RSP_Z02 response = instrumentSystemSendsHostQueryStartSuccess(message);
 			response.getQAK().getQueryTag().setValue(message.getQPD().getQueryTag().getValue());
 
 			Sample sample = sampleService.getSampleByAccessionNumber(specimenId.toString());
 			if (sample != null) {
+				LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemSendsHostQueryStart", "found sample for: " + specimenId.toString());
+
 				int pidSeq = 0;
 				int orcSeq = 0;
 				int obrSeq = 0;
@@ -225,11 +234,16 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 
 		private Message instrumentSystemUploadsTestResults(ORU_R01 message,
 				@SuppressWarnings("rawtypes") Map theMetadata) throws HL7Exception, IOException {
+			LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResults", "received HL7 result(s) for GeneXpert analyzer: parsing ORU_R01");
+
 			List<AnalyzerResults> resultList = new ArrayList<>();
 			List<AnalyzerResults> notMatchedResults = new ArrayList<>();
 			for (ORU_R01_PATIENT_RESULT patientResult : message.getPATIENT_RESULTAll()) {
+				LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResults", "parsing patient result");
 				PID pid = patientResult.getPATIENT().getPID();
 				for (ORU_R01_ORDER_OBSERVATION orderObservation : patientResult.getORDER_OBSERVATIONAll()) {
+					LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResults", "parsing order observation");
+
 					ORC orc = orderObservation.getORC();
 					OBR obr = orderObservation.getOBR();
 					Optional<NTE> orderNTE = orderObservation.getNTEReps() <= 0 ? Optional.empty()
@@ -242,6 +256,8 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 					String accessionNumber = spm.getSpecimenID().getPlacerAssignedIdentifier().getEntityIdentifier()
 							.getValue();
 					for (ORU_R01_OBSERVATION observation : orderObservation.getOBSERVATIONAll()) {
+						LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResults", "parsing observation");
+
 						OBX obx = observation.getOBX();
 						Optional<NTE> resultNTE = observation.getNTEReps() <= 0 ? Optional.empty()
 								: Optional.of(observation.getNTE());
@@ -260,13 +276,15 @@ public class GeneXpertServlet extends HohServlet implements ServletPlugin {
 					}
 				}
 			}
-			inserter.persistImport(resultList);
-			// TODO insert the results as analyzer results
+			LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResults", "parsing order observation");
 
+			inserter.persistImport(resultList);
 			return instrumentSystemUploadsTestResultsSuccessACK(message);
 		}
 
 		private ACK instrumentSystemUploadsTestResultsSuccessACK(ORU_R01 message) throws HL7Exception, IOException {
+			LogEvent.logTrace(this.getClass().getSimpleName(), "instrumentSystemUploadsTestResultsSuccessACK", "Sending ACK");
+
 			ACK response = (ACK) message.generateACK(AcknowledgmentCode.CA, null);
 			MSH responseMSH = response.getMSH();
 			responseMSH.getAcceptAcknowledgmentType().setValue("NE");

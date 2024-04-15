@@ -24,7 +24,8 @@ import java.util.List;
 import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerLineInserter;
 import org.openelisglobal.common.services.PluginAnalyzerService;
 import org.openelisglobal.plugin.AnalyzerImporterPlugin;
-
+import oe.plugin.analyzer.SysmexXNLAnalyzerImplementation;
+import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerResponder;
 import org.openelisglobal.common.log.LogEvent;
 
 public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
@@ -188,7 +189,23 @@ public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
 	}
 
 	@Override
+	public boolean isAnalyzerResult(List<String> lines) {
+		for (String line : lines) {
+			if (line.startsWith(SysmexXNLAnalyzerImplementation.RESULT_RECORD_IDENTIFIER)) {
+				return true;
+			}
+		}
+		LogEvent.logDebug(this.getClass().getSimpleName(), "isAnalyzerResult", "no result recoord identifier located");
+		return false;
+	}
+
+	@Override
 	public AnalyzerLineInserter getAnalyzerLineInserter() {
+		return new SysmexXNLAnalyzerImplementation();
+	}
+
+	@Override
+	public AnalyzerResponder getAnalyzerResponder() {
 		return new SysmexXNLAnalyzerImplementation();
 	}
 
