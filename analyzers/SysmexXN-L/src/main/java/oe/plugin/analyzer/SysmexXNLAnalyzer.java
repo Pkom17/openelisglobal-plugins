@@ -20,27 +20,29 @@ import static org.openelisglobal.common.services.PluginAnalyzerService.getInstan
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerLineInserter;
 import org.openelisglobal.common.services.PluginAnalyzerService;
 import org.openelisglobal.plugin.AnalyzerImporterPlugin;
-import oe.plugin.analyzer.SysmexXNLAnalyzerImplementation;
 import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerResponder;
 import org.openelisglobal.common.log.LogEvent;
 
 public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
+
+	public static final String ANALYZER_NAME = "SysmexXNLAnalyzer";
 	
 	@Override
 	public boolean connect() { 
 		List<PluginAnalyzerService.TestMapping> nameMapping = new ArrayList<>();
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_WBC, "White Blood Cells Count",
+				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_WBC, "White Blood Cells Count (WBC)",
 						SysmexXNLAnalyzerImplementation.LOINC_WBC));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_RBC, "Red Blood Cells Count",
+				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_RBC, "Red Blood Cells Count (RBC)",
 						SysmexXNLAnalyzerImplementation.LOINC_RBC));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_HGB, "​Hemoglobin​",
+				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_HGB, "Hemoglobin",
 				SysmexXNLAnalyzerImplementation.LOINC_HGB));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_HCT, "Hematocrit",
@@ -67,7 +69,7 @@ public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
 				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_MPV, "",
 						SysmexXNLAnalyzerImplementation.LOINC_MPV));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_NEUT_COUNT, "​Neutrophiles​",
+				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_NEUT_COUNT, "Neutrophiles",
 				SysmexXNLAnalyzerImplementation.LOINC_NEUT_COUNT));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_NEUT_PERCENT, "Neutrophiles (%)",
@@ -135,7 +137,7 @@ public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXNLAnalyzerImplementation.ANALYZER_TEST_TCBF_COUNT, "",
 						SysmexXNLAnalyzerImplementation.LOINC_TCBF_COUNT));
-		getInstance().addAnalyzerDatabaseParts("SysmexXNLAnalyzer", "SysmexXNLAnalyzer", nameMapping, true);
+		getInstance().addAnalyzerDatabaseParts(ANALYZER_NAME, ANALYZER_NAME, nameMapping, true);
 		getInstance().registerAnalyzer(this);
 		return true;
 	}
@@ -144,39 +146,41 @@ public class SysmexXNLAnalyzer implements AnalyzerImporterPlugin {
 	public boolean isTargetAnalyzer(List<String> lines) {
 		for (String line : lines) {
 			if (line.startsWith(SysmexXNLAnalyzerImplementation.HEADER_RECORD_IDENTIFIER)) {
-				String[] headerRecord = line.split(SysmexXNLAnalyzerImplementation.DEFAULT_FIELD_DELIMITER);
+				String[] headerRecord = line.split(Pattern.quote(SysmexXNLAnalyzerImplementation.FD));
 				if (headerRecord.length < 5) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is not SysmexXN: header record not long enough");
 					return false;
 				}
-				String[] senderName = headerRecord[4].split(SysmexXNLAnalyzerImplementation.DEFAULT_SUBFIELD_DELIMITER);
-				if (senderName.length < 1) {
+				String[] senderNameFields = headerRecord[4].split(Pattern.quote(SysmexXNLAnalyzerImplementation.CD));
+				if (senderNameFields.length < 1) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is not SysmexXN: sender name field not long enough");
 					return false;
 				}
-				LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message analyzer name is " + senderName[0]);
-				if (senderName[0].equalsIgnoreCase("XN-550")) {
+				String senderName = senderNameFields[0].trim();
+
+				LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message analyzer name is " + senderName);
+				if (senderName.equalsIgnoreCase("XN-550")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-530")) {
+				} else if (senderName.equalsIgnoreCase("XN-530")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-450")) {
+				} else if (senderName.equalsIgnoreCase("XN-450")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-430")) {
+				} else if (senderName.equalsIgnoreCase("XN-430")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-350")) {
+				} else if (senderName.equalsIgnoreCase("XN-350")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-330")) {
+				} else if (senderName.equalsIgnoreCase("XN-330")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-150")) {
+				} else if (senderName.equalsIgnoreCase("XN-150")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XN-110")) {
+				} else if (senderName.equalsIgnoreCase("XN-110")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXN (XN-350)");
 					return true;
 				} 

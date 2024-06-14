@@ -28,8 +28,8 @@ public class SysmexXPAnalyzerPermission extends PermissionPlugin {
     @Override
     protected boolean insertPermission(){
 		IPluginPermissionService service = SpringContext.getBean(IPluginPermissionService.class);
-		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "SysmexXPAnalyzer",
-				"Results->Analyzer->SysmexXPAnalyzer");
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", SysmexXPAnalyzer.ANALYZER_NAME,
+				"Results->Analyzer->" + SysmexXPAnalyzer.ANALYZER_NAME);
         Role role = service.getSystemRole( "Results" );
         return service.bindRoleToModule( role, module );
     }

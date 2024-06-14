@@ -24,7 +24,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
+import java.util.regex.Pattern;
 import java.util.Optional;
 
 import org.apache.commons.validator.GenericValidator;
@@ -144,9 +144,10 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 	protected static final String ORDER_RECORD_IDENTIFIER = "O";
 	protected static final String RESULT_RECORD_IDENTIFIER = "R";
 	protected static final String END_RECORD_IDENTIFIER = "L";
-	protected static final String DEFAULT_FIELD_DELIMITER = "\\|";
-	protected static final String DEFAULT_SUBFIELD_DELIMITER = "\\^";
-	protected static final String DEFAULT_REPEATER_DELIMITER = "\\\\";
+	protected static final String FD = "|"; //DEFAULT_FIELD_DELIMITER
+	protected static final String CD = "^"; //DEFAULT_COMPONENT_DELIMITER
+	protected static final String RD = "\\"; //DEFAULT_REPEATER_DELIMITER
+	protected static final String ED = "&"; //DEFAULT_ESCAPE_DELIMITER
 	protected static final String TEST_COMMUNICATION_IDENTIFIER = "M|1|106";
 
 	private SimpleDateFormat dateFormat = new SimpleDateFormat("yyyyMMdd");
@@ -213,7 +214,7 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 			testCodeToTestsMap.put(entry.getKey(), testService.getTestsByLoincCode(entry.getValue()));
 		}
  
-		Analyzer analyzer = analyzerService.getAnalyzerByName("SysmexXNLAnalyzer");
+		Analyzer analyzer = analyzerService.getAnalyzerByName(SysmexXNLAnalyzer.ANALYZER_NAME);
 		ANALYZER_ID = analyzer.getId();
 	}
  
@@ -270,7 +271,7 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
  
 	@Override
 	public String getError() {
-		return "SysmexXNLAnalyzer analyzer unable to write to database";
+		return SysmexXNLAnalyzer.ANALYZER_NAME + " analyzer unable to write to database";
 	}
  
 	private Test findMatchingTest(Sample sample, String resultTestCode) {
@@ -301,16 +302,16 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 	// R|1|^^^^WBC^1|7.80|10*3/uL||N||||||20011116101000<CR>
 	private void addRecordsToResults(String patientRecord, String orderRecord, String resultRecord,
 			List<AnalyzerResults> results, String currentUserId) {
-		String[] patientRecordFields = patientRecord.split(DEFAULT_FIELD_DELIMITER);
-		String[] orderRecordFields = orderRecord.split(DEFAULT_FIELD_DELIMITER);
-		String[] orderTestIdFields = orderRecordFields[4].split(DEFAULT_REPEATER_DELIMITER);
-		String[] orderIdFields = orderRecordFields[3].split(DEFAULT_SUBFIELD_DELIMITER);
-		String[] resultRecordFields = resultRecord.split(DEFAULT_FIELD_DELIMITER);
-		String[] resultTestIdField = resultRecordFields[2].split(DEFAULT_SUBFIELD_DELIMITER);
+		String[] patientRecordFields = patientRecord.split(Pattern.quote(FD));
+		String[] orderRecordFields = orderRecord.split(Pattern.quote(FD));
+		String[] orderTestIdFields = orderRecordFields[4].split(Pattern.quote(RD));
+		String[] orderIdFields = orderRecordFields[3].split(Pattern.quote(CD));
+		String[] resultRecordFields = resultRecord.split(Pattern.quote(FD));
+		String[] resultTestIdField = resultRecordFields[2].split(Pattern.quote(CD));
 		String resultRecordAbnormalFlag = resultRecordFields[6];
 		List<String> orderTestIds = new ArrayList<>();
 		for (String orderIdField : orderTestIdFields) {
-			String[] orderIds = orderIdField.split(DEFAULT_SUBFIELD_DELIMITER);
+			String[] orderIds = orderIdField.split(Pattern.quote(CD));
 			String orderTestId = orderIds.length >= 5 ? orderIds[4] : "";
 			if (GenericValidator.isBlankOrNull(orderTestId)) {
 				LogEvent.logWarn(this.getClass().getSimpleName(), "addRecordsToResults", "order analysis parameter name is not present");
@@ -427,7 +428,7 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 
 		for (String line : lines) {
 			if (line.startsWith(TEST_COMMUNICATION_IDENTIFIER)) {
-				LogEvent.logInfo(this.getClass().getName(), "buildResponse", "this is a test communication record for Sysmex-XNL");
+				LogEvent.logInfo(this.getClass().getName(), "buildResponse", "this is a test communication record for " + SysmexXNLAnalyzer.ANALYZER_NAME);
 			}
 			if (line.startsWith(QUERY_RECORD_IDENTIFIER)) {
 				LogEvent.logDebug(this.getClass().getName(), "buildResponse", "request contains query record");
@@ -441,10 +442,10 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 
 	private String generateQueryResponse(String queryRecord) {
 		LogEvent.logDebug(this.getClass().getSimpleName(), "generateQueryResponse", "generating query response");
-		String[] queryRecordFields = queryRecord.split(DEFAULT_FIELD_DELIMITER);
+		String[] queryRecordFields = queryRecord.split(Pattern.quote(FD));
 		
-		String[] startingRangeIdNumber = queryRecordFields[3].split(DEFAULT_SUBFIELD_DELIMITER);
-		String sampleIdNo = startingRangeIdNumber[2];
+		String[] startingRangeIdNumber = queryRecordFields[2].split(Pattern.quote(CD));
+		String sampleIdNo = startingRangeIdNumber[2].trim();
 		String sampleNoAttribute = startingRangeIdNumber[3];
 
 		StringBuilder msgBuilder = new StringBuilder();
@@ -456,8 +457,8 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 			//return could not find sample messager
 			return msgBuilder.append("H|\\^&|\r\n")
 				.append("P|1|\r\n")
-				.append("O|1||||||||||||||||||||||||Y/r/n") //"Y" is no order exists marker
-				.append("L|1|N/r/n").toString();
+				.append("O|1||||||||||||||||||||||||Y\r\n") //"Y" is no order exists marker
+				.append("L|1|N\r\n").toString();
 		}
 		Patient patient = sampleHumanService.getPatientForSample(sample);
 		Person person = patient.getPerson();
@@ -487,8 +488,8 @@ public class SysmexXNLAnalyzerImplementation extends AnalyzerLineInserter implem
 		}
 		msgBuilder.append("||")
 			.append(sample.getEnteredDate() == null ? "" : dateTimeFormat.format(sample.getEnteredDate()))
-			.append("|||||N||||||||||||||Q/r/n");
-		msgBuilder.append("L|1|N/r/n");
+			.append("|||||N||||||||||||||Q\r\n");
+		msgBuilder.append("L|1|N\r\n");
 		return msgBuilder.toString();
 	}
  

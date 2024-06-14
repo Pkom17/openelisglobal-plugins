@@ -20,25 +20,29 @@ import static org.openelisglobal.common.services.PluginAnalyzerService.getInstan
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.regex.Pattern;
 
 import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerLineInserter;
 import org.openelisglobal.common.services.PluginAnalyzerService;
 import org.openelisglobal.plugin.AnalyzerImporterPlugin;
+import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerResponder;
 import org.openelisglobal.common.log.LogEvent;
 
 public class SysmexXPAnalyzer implements AnalyzerImporterPlugin {
+
+	public static final String ANALYZER_NAME = "SysmexXPAnalyzer";
 
 	@Override
 	public boolean connect() {
 		List<PluginAnalyzerService.TestMapping> nameMapping = new ArrayList<>();
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_WBC, "White Blood Cells Count",
+				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_WBC, "White Blood Cells Count (WBC)",
 						SysmexXPAnalyzerImplementation.LOINC_WBC));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_RBC, "Red Blood Cells Count",
+				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_RBC, "Red Blood Cells Count (RBC)",
 						SysmexXPAnalyzerImplementation.LOINC_RBC));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_HGB, "​Hemoglobin",
+				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_HGB, "Hemoglobin",
 				SysmexXPAnalyzerImplementation.LOINC_HGB));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_HCT, "Hematocrit",
@@ -65,7 +69,7 @@ public class SysmexXPAnalyzer implements AnalyzerImporterPlugin {
 				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_MPV, "",
 						SysmexXPAnalyzerImplementation.LOINC_MPV));
 		nameMapping.add(
-				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_NEUT_COUNT, "Neutrophiles​",
+				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_NEUT_COUNT, "Neutrophiles",
 				SysmexXPAnalyzerImplementation.LOINC_NEUT_COUNT));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_NEUT_PERCENT, "Neutrophiles (%)",
@@ -106,7 +110,7 @@ public class SysmexXPAnalyzer implements AnalyzerImporterPlugin {
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(SysmexXPAnalyzerImplementation.ANALYZER_TEST_MXD_PERCENT, "",
 						SysmexXPAnalyzerImplementation.LOINC_MXD_PERCENT));
-		getInstance().addAnalyzerDatabaseParts("SysmexXPAnalyzer", "SysmexXPAnalyzer", nameMapping, true);
+		getInstance().addAnalyzerDatabaseParts(SysmexXPAnalyzer.ANALYZER_NAME, SysmexXPAnalyzer.ANALYZER_NAME, nameMapping, true);
 		getInstance().registerAnalyzer(this);
 		return true;
 	}
@@ -115,21 +119,22 @@ public class SysmexXPAnalyzer implements AnalyzerImporterPlugin {
 	public boolean isTargetAnalyzer(List<String> lines) {
 		for (String line : lines) {
 			if (line.startsWith(SysmexXPAnalyzerImplementation.HEADER_RECORD_IDENTIFIER)) {
-				String[] headerRecord = line.split(SysmexXPAnalyzerImplementation.DEFAULT_FIELD_DELIMITER);
+				String[] headerRecord = line.split(Pattern.quote(SysmexXPAnalyzerImplementation.FD));
 				if (headerRecord.length < 5) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is not SysmexXP: header record not long enough");
 					return false;
 				}
-				String[] senderName = headerRecord[4].split(SysmexXPAnalyzerImplementation.DEFAULT_SUBFIELD_DELIMITER);
-				if (senderName.length < 1) {
+				String[] senderNameFields = headerRecord[4].split(Pattern.quote(SysmexXPAnalyzerImplementation.CD));
+				if (senderNameFields.length < 1) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is not SysmexXP: sender name field not long enough");
 					return false;
 				}
-				LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message analyzer name is " + senderName[0]);
-				if (senderName[0].equalsIgnoreCase("XP-100")) {
+				String senderName = senderNameFields[0].trim();
+				LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message analyzer name is " + senderName);
+				if (senderName.equalsIgnoreCase("XP-100")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXP (XP-100)");
 					return true;
-				} else if (senderName[0].equalsIgnoreCase("XP-300")) {
+				} else if (senderName.equalsIgnoreCase("XP-300")) {
 					LogEvent.logTrace(this.getClass().getSimpleName(), "isTargetAnalyzer", "incoming message is SysmexXP (XP-300)");
 					return true;
 				}
@@ -142,7 +147,23 @@ public class SysmexXPAnalyzer implements AnalyzerImporterPlugin {
 	}
 
 	@Override
+	public boolean isAnalyzerResult(List<String> lines) {
+		for (String line : lines) {
+			if (line.startsWith(SysmexXPAnalyzerImplementation.RESULT_RECORD_IDENTIFIER)) {
+				return true;
+			}
+		}
+		LogEvent.logDebug(this.getClass().getSimpleName(), "isAnalyzerResult", "no result recoord identifier located");
+		return false;
+	}
+
+	@Override
 	public AnalyzerLineInserter getAnalyzerLineInserter() {
+		return new SysmexXPAnalyzerImplementation();
+	}
+
+	@Override
+	public AnalyzerResponder getAnalyzerResponder() {
 		return new SysmexXPAnalyzerImplementation();
 	}
 
