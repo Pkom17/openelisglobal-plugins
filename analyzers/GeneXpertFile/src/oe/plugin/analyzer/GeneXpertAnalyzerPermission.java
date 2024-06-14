@@ -27,8 +27,8 @@ public class GeneXpertAnalyzerPermission extends PermissionPlugin {
     @Override
     protected boolean insertPermission(){
         PluginPermissionService service = new PluginPermissionService();
-		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "GeneXpertAnalyzer",
-				"Results->Analyzer->GeneXpertAnalyzer");
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", GeneXpertAnalyzer.ANALYZER_NAME,
+				"Results->Analyzer->" + GeneXpertAnalyzer.ANALYZER_NAME);
         Role role = service.getSystemRole( "Results" );
         return service.bindRoleToModule( role, module );
     }
