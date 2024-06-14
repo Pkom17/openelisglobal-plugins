@@ -27,7 +27,8 @@ import org.openelisglobal.plugin.AnalyzerImporterPlugin;
 
 
 public class GeneXpertAnalyzer implements AnalyzerImporterPlugin {
-
+	
+	public static final String ANALYZER_NAME = "GeneXpertAnalyzer";
 
     @Override
 	public boolean connect(){
@@ -48,7 +49,7 @@ public class GeneXpertAnalyzer implements AnalyzerImporterPlugin {
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.COV_2, "COVID-19 PCR",
 						GeneXpertAnalyzerImplementation.COV_2_LOINC));
-		getInstance().addAnalyzerDatabaseParts("GeneXpertAnalyzer", "Plugin for GeneXpertAnalyzer", nameMapping);
+		getInstance().addAnalyzerDatabaseParts(ANALYZER_NAME, "Plugin for " + ANALYZER_NAME, nameMapping);
         getInstance().registerAnalyzer(this);
         return true;
     }
