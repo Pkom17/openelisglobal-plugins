@@ -41,7 +41,7 @@
 			<artifactId>openelisglobal</artifactId>
 			<version>2.7.3.8</version>
 			<scope>system</scope>
-			<systemPath>/build/lib/openelisglobal-2.7.3.8.jar</systemPath>
+			<systemPath>/home/runner/work/openelisglobal-plugins/openelisglobal-plugins/lib/openelisglobal-2.7.3.8.jar</systemPath>
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>
