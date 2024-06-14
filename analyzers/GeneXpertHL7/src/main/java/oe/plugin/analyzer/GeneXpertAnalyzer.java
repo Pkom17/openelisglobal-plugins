@@ -25,47 +25,40 @@ import org.openelisglobal.analyzerimport.analyzerreaders.AnalyzerLineInserter;
 import org.openelisglobal.common.services.PluginAnalyzerService;
 import org.openelisglobal.plugin.AnalyzerImporterPlugin;
 
-
 public class GeneXpertAnalyzer implements AnalyzerImporterPlugin {
-	
-	public static final String ANALYZER_NAME = "GeneXpertAnalyzer";
 
-    @Override
-	public boolean connect(){
+	@Override
+	public boolean connect() {
 		List<PluginAnalyzerService.TestMapping> nameMapping = new ArrayList<>();
-
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.HBV, "HEPATITIS B VIRAL LOAD",
 						GeneXpertAnalyzerImplementation.HBV_LOINC));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.HCV, "HEPATITIS C VIRAL LOAD",
 						GeneXpertAnalyzerImplementation.HCV_LOINC));
-//		nameMapping.add(
-//				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.HIV_QUAL, "​Xpert HIV-1 Qual",
-//				GeneXpertAnalyzerImplementation.HIV_QUAL_LOINC));
+		nameMapping.add(
+				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.HIV_QUAL, "​Xpert HIV-1 Qual",
+				GeneXpertAnalyzerImplementation.HIV_QUAL_LOINC));
 		nameMapping
 				.add(new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.HIV_VIRAL, "HIV VIRAL LOAD",
 						GeneXpertAnalyzerImplementation.HIV_VIRAL_LOINC));
 		nameMapping.add(
 				new PluginAnalyzerService.TestMapping(GeneXpertAnalyzerImplementation.COV_2, "COVID-19 PCR",
 						GeneXpertAnalyzerImplementation.COV_2_LOINC));
-		getInstance().addAnalyzerDatabaseParts(ANALYZER_NAME, "Plugin for " + ANALYZER_NAME, nameMapping);
-        getInstance().registerAnalyzer(this);
-        return true;
-    }
+		getInstance().addAnalyzerDatabaseParts(GeneXpertAnalyzer.ANALYZER_NAME, GeneXpertAnalyzer.ANALYZER_NAME, nameMapping, true);
+		getInstance().registerAnalyzer(this);
+		return true;
+	}
 
-    @Override
-    public boolean isTargetAnalyzer(List<String> lines) {
-		for (String line : lines) {
-			if (line.contains("GeneXpert Dx System")) {
-				return true;
-			}
-		}
-    	return true;
-    }
+	@Override
+	// this plugin does not work for flat files, so we disable it in that workflow
+	public boolean isTargetAnalyzer(List<String> lines) {
+		return false;
+	}
 
-    @Override
-    public AnalyzerLineInserter getAnalyzerLineInserter() {
+	@Override
+	public AnalyzerLineInserter getAnalyzerLineInserter() {
 		return new GeneXpertAnalyzerImplementation();
-    }
+	}
+
 }

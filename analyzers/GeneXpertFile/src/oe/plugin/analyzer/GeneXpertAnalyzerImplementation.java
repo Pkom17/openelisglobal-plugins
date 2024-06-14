@@ -106,7 +106,7 @@ public class GeneXpertAnalyzerImplementation extends AnalyzerLineInserter {
 		resultMap.put(COV_2_ANALYZER_POS.toLowerCase(), COV_2_DB_POS.toLowerCase());
 		resultMap.put(COV_2_ANALYZER_INV.toLowerCase(), COV_2_DB_INV.toLowerCase());
 
-		Analyzer analyzer = analyzerService.getAnalyzerByName("GeneXpertAnalyzer");
+		Analyzer analyzer = analyzerService.getAnalyzerByName(GeneXpertAnalyzer.ANALYZER_NAME);
 		ANALYZER_ID = analyzer.getId();
 
 	}
@@ -257,6 +257,6 @@ public class GeneXpertAnalyzerImplementation extends AnalyzerLineInserter {
 
 	@Override
 	public String getError() {
-		return "GeneXpertAnalyzer unable to write to database";
+		return GeneXpertAnalyzer.ANALYZER_NAME + " unable to write to database";
 	}
 }

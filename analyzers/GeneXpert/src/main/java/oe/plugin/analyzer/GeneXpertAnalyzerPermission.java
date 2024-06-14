@@ -16,9 +16,10 @@
 
 package oe.plugin.analyzer;
 
-import org.openelisglobal.common.services.PluginPermissionService;
+import org.openelisglobal.common.services.IPluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
+import org.openelisglobal.spring.util.SpringContext;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
 
 /**
@@ -26,7 +27,7 @@ import org.openelisglobal.systemmodule.valueholder.SystemModule;
 public class GeneXpertAnalyzerPermission extends PermissionPlugin {
     @Override
     protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
+		IPluginPermissionService service = SpringContext.getBean(IPluginPermissionService.class);
 		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", GeneXpertAnalyzer.ANALYZER_NAME,
 				"Results->Analyzer->" + GeneXpertAnalyzer.ANALYZER_NAME);
         Role role = service.getSystemRole( "Results" );
