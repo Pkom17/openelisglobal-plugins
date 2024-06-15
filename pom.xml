@@ -29,7 +29,7 @@
 	</modules>
 
 	<properties>
-		<springframework.version>5.3.14</springframework.version>
+		<springframework.version>5.3.27</springframework.version>
 		<maven.compiler.target>11</maven.compiler.target>
 		<maven.compiler.source>11</maven.compiler.source>
 		<maven.compiler.release>11</maven.compiler.release>
