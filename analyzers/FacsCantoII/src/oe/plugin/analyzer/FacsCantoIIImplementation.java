@@ -55,8 +55,8 @@ public class FacsCantoIIImplementation extends AnalyzerLineInserter {
 
 	static{
 
-		testHeaderNameMap.put("CD3 %Parent", SpringContext.getBean(TestService.class).getTestByName("CD3 percentage count"));
-		testHeaderNameMap.put("CD4 %Parent", SpringContext.getBean(TestService.class).getTestByName("CD4 percentage count"));
+		testHeaderNameMap.put("Q3 %Parent", SpringContext.getBean(TestService.class).getTestByName("CD3 percentage count"));
+		testHeaderNameMap.put("Q4 %Parent", SpringContext.getBean(TestService.class).getTestByName("CD4 percentage count"));
 		// testHeaderNameMap.put("Q2 %Parent", SpringContext.getBean(TestService.class).getTestByName("Dénombrement des lymphocytes  CD4 (%)"));
 
 		System.out.println(testHeaderNameMap);
@@ -70,8 +70,8 @@ public class FacsCantoIIImplementation extends AnalyzerLineInserter {
 
 	static{
 
-		testUnitMap.put("CD3 %Parent", "/1|%");
-		testUnitMap.put("CD4 %Parent", "/1|%");
+		testUnitMap.put("Q3 %Parent", "/1|%");
+		testUnitMap.put("Q4 %Parent", "/1|%");
 
 		System.out.println(testUnitMap);
 
@@ -106,6 +106,7 @@ public class FacsCantoIIImplementation extends AnalyzerLineInserter {
 			System.out.println("processing line #: "  + j);
 			line = lines.get(j);
 			data = line.split(",");
+			System.out.println(data.toString());
 
 			if (line.length() == 0 || data.length == 0) {
 				continue;
@@ -114,8 +115,10 @@ public class FacsCantoIIImplementation extends AnalyzerLineInserter {
 			String dateTime2 = "";
 
 			String currentAccessionNumber = "";
+			System.out.println("indexTestMap: "+indexTestMap);
 
 			for (Integer k = 0; k < data.length; k++) {
+				System.out.println("data[k]: "+data[k]);
 
 				if (indexTestMap.containsKey(k.toString())) {
 
@@ -227,12 +230,6 @@ public class FacsCantoIIImplementation extends AnalyzerLineInserter {
 		return ReadOnly;
 
 	}
-
-
-
-
-
-
 
 	private Timestamp getTimestampFromDate(String dateTime) {
 		//return DateUtil.convertStringDateToTimestampWithPattern(dateTime, DATE_PATTERN);

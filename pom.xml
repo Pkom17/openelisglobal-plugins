@@ -26,6 +26,15 @@
 		<module>./analyzers/SysmexXN-L</module>
 		<module>./analyzers/SysmexXP</module>
 		<module>./analyzers/pocH-100i</module>
+		<module>./analyzers/SysmexKX21</module>
+		<module>./analyzers/Cobas4800</module>
+		<module>./analyzers/CobasTaqman96VL</module>
+		<module>./analyzers/CobasTaqMan96DBS</module>
+		<module>./analyzers/CobasTaqMan48VL</module>
+		<module>./analyzers/AB7500Fast</module>
+		<module>./analyzers/Cobas6800VL</module>
+		<module>./analyzers/Sysmex4000i</module>
+		<module>./analyzers/SysmexXN1000</module>
 	</modules>
 
 	<properties>
@@ -39,9 +48,9 @@
 		<dependency>
 			<groupId>org.openelisglobal</groupId>
 			<artifactId>openelisglobal</artifactId>
-			<version>2.7.3.8</version>
-			<scope>system</scope>
-			<systemPath>/home/runner/work/openelisglobal-plugins/openelisglobal-plugins/lib/openelisglobal-2.7.3.8.jar</systemPath>
+			<version>2.7.3.9</version>
+<!--			<scope>system</scope>-->
+<!--			<systemPath>/home/runner/work/openelisglobal-plugins/openelisglobal-plugins/lib/openelisglobal-2.7.3.8.jar</systemPath>-->
 		</dependency>
 		<dependency>
 			<groupId>commons-validator</groupId>

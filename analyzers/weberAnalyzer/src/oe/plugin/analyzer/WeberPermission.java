@@ -20,15 +20,20 @@ import org.openelisglobal.common.services.PluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
+import org.openelisglobal.systemmodule.valueholder.SystemModuleUrl;
 
 /**
  */
-public class WeberPermission extends PermissionPlugin{
+public class WeberPermission extends PermissionPlugin {
 	@Override
-	protected boolean insertPermission(){
+	protected boolean insertPermission() {
 		PluginPermissionService service = new PluginPermissionService();
-		SystemModule module = service.getOrCreateSystemModule( "AnalyzerResults", "WeberAnalyzer", "Results->Analyzer->WeberAnalyzer" );
-		Role role = service.getSystemRole( "Results" );
-		return service.bindRoleToModule( role, module );
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "WeberAnalyzer",
+				"Results->Analyzer->WeberAnalyzer");
+//		Role role = service.getSystemRole( "Results entry" );
+//		return service.bindRoleToModule( role, module );
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
 	}
 }

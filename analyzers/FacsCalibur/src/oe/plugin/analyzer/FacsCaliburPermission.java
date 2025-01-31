@@ -20,15 +20,18 @@ import org.openelisglobal.common.services.PluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
+import org.openelisglobal.systemmodule.valueholder.SystemModuleUrl;
 
 /**
  */
-public class FacsCaliburPermission extends PermissionPlugin{
-    @Override
-    protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
-        SystemModule module = service.getOrCreateSystemModule( "AnalyzerResults", "FacsCalibur", "Results->Analyzer->FacsCalibur" );
-        Role role = service.getSystemRole( "Results" );
-        return service.bindRoleToModule( role, module );
-    }
+public class FacsCaliburPermission extends PermissionPlugin {
+	@Override
+	protected boolean insertPermission() {
+		PluginPermissionService service = new PluginPermissionService();
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "FacsCalibur",
+				"Results->Analyzer->FacsCalibur");
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
+	}
 }

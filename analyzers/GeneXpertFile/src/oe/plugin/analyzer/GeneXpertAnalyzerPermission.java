@@ -20,16 +20,20 @@ import org.openelisglobal.common.services.PluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
+import org.openelisglobal.systemmodule.valueholder.SystemModuleUrl;
 
 /**
  */
 public class GeneXpertAnalyzerPermission extends PermissionPlugin {
-    @Override
-    protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
+	@Override
+	protected boolean insertPermission() {
+		PluginPermissionService service = new PluginPermissionService();
+
 		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", GeneXpertAnalyzer.ANALYZER_NAME,
 				"Results->Analyzer->" + GeneXpertAnalyzer.ANALYZER_NAME);
-        Role role = service.getSystemRole( "Results" );
-        return service.bindRoleToModule( role, module );
-    }
+		// Role role = service.getSystemRole( "Results entry" );
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
+	}
 }

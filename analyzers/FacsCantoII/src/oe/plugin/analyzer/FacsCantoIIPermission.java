@@ -20,16 +20,19 @@ import org.openelisglobal.common.services.PluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
+import org.openelisglobal.systemmodule.valueholder.SystemModuleUrl;
 
 /**
  */
-public class FacsCantoIIPermission extends PermissionPlugin{
-    @Override
-    protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
-        SystemModule module = service.getOrCreateSystemModule( "AnalyzerResults", "FacsCantoII", "Results->Analyzer->FacsCantoII" );
-        Role role = service.getSystemRole( "Results" );
-        //Role role = service.getSystemRole( "Results" );
-        return service.bindRoleToModule( role, module );
-    }
+public class FacsCantoIIPermission extends PermissionPlugin {
+	@Override
+	protected boolean insertPermission() {
+		PluginPermissionService service = new PluginPermissionService();
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "FacsCantoII",
+				"Results->Analyzer->FacsCantoII");
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
+		
+	}
 }

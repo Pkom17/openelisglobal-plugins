@@ -55,8 +55,7 @@ import ca.uhn.hl7v2.protocol.ReceivingApplication;
 import ca.uhn.hl7v2.protocol.ReceivingApplicationException;
 
 @SuppressWarnings("serial")
-public class 
-Servlet extends HohServlet implements ServletPlugin {
+public class HttpHl7TemplateAnalyzerServlet extends HohServlet implements ServletPlugin {
 
 	SampleService sampleService = SpringContext.getBean(SampleService.class);
 	AnalysisService analysisService = SpringContext.getBean(AnalysisService.class);

@@ -23,12 +23,16 @@ import org.openelisglobal.systemmodule.valueholder.SystemModule;
 
 /**
  */
-public class SysmexXTPermission extends PermissionPlugin{
-    @Override
-    protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
-        SystemModule module = service.getOrCreateSystemModule( "AnalyzerResults", "SysmexXTAnalyzer", "Results->Analyzer->SysmexXTAnalyzer" );
-        Role role = service.getSystemRole( "Results" );
-        return service.bindRoleToModule( role, module );
-    }
+public class SysmexXTPermission extends PermissionPlugin {
+	@Override
+	protected boolean insertPermission() {
+		PluginPermissionService service = new PluginPermissionService();
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "SysmexXTAnalyzer",
+				"Results->Analyzer->SysmexXTAnalyzer");
+//        Role role = service.getSystemRole( "Results Admin" );
+//        return service.bindRoleToModule( role, module );
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
+	}
 }

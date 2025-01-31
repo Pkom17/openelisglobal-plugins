@@ -20,15 +20,18 @@ import org.openelisglobal.common.services.PluginPermissionService;
 import org.openelisglobal.plugin.PermissionPlugin;
 import org.openelisglobal.role.valueholder.Role;
 import org.openelisglobal.systemmodule.valueholder.SystemModule;
+import org.openelisglobal.systemmodule.valueholder.SystemModuleUrl;
 
 /**
  */
-public class CobasC111Permission extends PermissionPlugin{
-    @Override
-    protected boolean insertPermission(){
-        PluginPermissionService service = new PluginPermissionService();
-        SystemModule module = service.getOrCreateSystemModule( "AnalyzerResults", "CobasC111Analyzer", "Results->Analyzer->CobasC111Analyzer" );
-        Role role = service.getSystemRole( "Results" );
-        return service.bindRoleToModule( role, module );
-    }
+public class CobasC111Permission extends PermissionPlugin {
+	@Override
+	protected boolean insertPermission() {
+		PluginPermissionService service = new PluginPermissionService();
+		SystemModule module = service.getOrCreateSystemModule("AnalyzerResults", "CobasC111Analyzer",
+				"Results->Analyzer->CobasC111Analyzer");
+		SystemModuleUrl moduleUrl = service.getOrCreateSystemModuleUrl(module, "/AnalyzerResults");
+		Role role = service.getSystemRole("Results");
+		return service.bindRoleToModule(role, module, moduleUrl);
+	}
 }

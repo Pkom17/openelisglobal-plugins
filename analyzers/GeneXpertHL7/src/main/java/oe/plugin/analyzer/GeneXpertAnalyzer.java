@@ -26,6 +26,8 @@ import org.openelisglobal.common.services.PluginAnalyzerService;
 import org.openelisglobal.plugin.AnalyzerImporterPlugin;
 
 public class GeneXpertAnalyzer implements AnalyzerImporterPlugin {
+	
+	public static final String ANALYZER_NAME = "GeneXpertAnalyzer";
 
 	@Override
 	public boolean connect() {
